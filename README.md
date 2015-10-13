@@ -5,7 +5,7 @@
 ## Description
 
 
-**SCITE** is a software to compute mutation histories of somatic cells.
+**SCITE** is a software package to compute mutation histories of somatic cells.
 Given noisy mutation profiles of single cells, **SCITE** performs a stochastic
 search to find the Maximum Likelihood tree and to sample from the posterior
 probability distribution. Tree reconstruction can be combined with an estimation
@@ -53,22 +53,22 @@ This writes a file named `scite`. Assuming the sample data file dataKimSimon.csv
 ### 1. Mutation Matrix
 
 
-Each row specifies the mutation profile of a single cell, and each column
+Each column specifies the mutation profile of a single cell, and each row
 represents one mutation.
 
 #### (a) Only absence/presence of mutation is distinguished
 The entry at position [i,j] should be
 
-* 0 if mutation j is not observed in cell i,
-* 1 if mutation j is observed in cell i, or
+* 0 if mutation i is not observed in cell j,
+* 1 if mutation i is observed in cell j, or
 * 3 if the data point is missing
 
 	
 #### (b) Heterozygous and homozygous mutations distinguished
 
-* 0 if mutation j is not observed in cell i,
-* 1 if heterozygous mutation j is observed in cell i
-* 2 if homozygous mutation j is observed in cell i
+* 0 if mutation i is not observed in cell j,
+* 1 if heterozygous mutation i is observed in cell j
+* 2 if homozygous mutation i is observed in cell j
 * 3 if the data point is missing
 
 ### 2. Mutation names (optional)
@@ -93,15 +93,15 @@ consecutively (e.g. dataKimSimon_ml1.gv, dataKimSimon_ml1.newick, dataKimSimon_m
 
 `-i <filename>`     Replace \<filename\> with the file containing the mutation matrix
 
-`-n <INT>`  Replace \<INT\> with the number of mutations (columns) in the dataset.
+`-n <INT>`  Replace \<INT\> with the number of mutations (rows) in the dataset.
 
-`-m <INT>`  Replace \<INT\> with the  number of cells (rows) in the dataset.
+`-m <INT>`  Replace \<INT\> with the  number of cells (columns) in the dataset.
 
 `-r <INT>`  Set \<INT\> to the desired number of repetitions of the MCMC.
 
 `-l <INT>`  Set \<INT\> to the desired chain length of each MCMC repetition
 
-`-g <DOUBLE>` Set \<DOUBLE\> to the desired value of gamma for ML computation (gamma > 1: fast convergence, possibly local optimum; gamma < 1: slower convergence); gamma needs to equal 1 to be able to sample from the posterior distribution
+`-g <DOUBLE>` Set \<DOUBLE\> to the desired value of gamma for ML computation (gamma > 1: more local exploration, possibly local optimum; gamma < 1: easier to explore the space, but less deeply); gamma needs to equal 1 to be able to sample from the posterior distribution
 
 
 
@@ -131,7 +131,4 @@ consecutively (e.g. dataKimSimon_ml1.gv, dataKimSimon_ml1.newick, dataKimSimon_m
 
 `-names <filename>` Replace \<filename\> with a file listing the mutation names.
 
-`-o <filename>`   Replace \<filename\> with the desired base of the output file to overwrite the default output file names. 
-
-
-
+`-o <filename>`   Replace \<filename\> with the desired base of the output file to overwrite the default output file names.
