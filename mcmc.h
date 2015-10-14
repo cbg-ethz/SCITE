@@ -8,7 +8,7 @@
 #ifndef MCMC_H
 #define MCMC_H
 
-double runMCMC(std::vector<int*>& bestTrees, double* errorRates, int noOfReps, int noOfLoops, double beta, std::vector<double> moveProbs, int n, int m, int** dataMatrix, char scoreType, int* trueParentVec);
+double runMCMC(std::vector<int*>& bestTrees, double* errorRates, int noOfReps, int noOfLoops, double beta, std::vector<double> moveProbs, int n, int m, int** dataMatrix, char scoreType, int* trueParentVec, std::vector<int*>& sampleTrees, int step, bool sample);
 
 int* getNewParentVecFast(int* currTreeParentVec, int nodeToMove, int newParent, int n);
 int* getNewParentVec_SwapFast(int* currTreeParentVec, int first, int second, int n);

@@ -131,6 +131,21 @@ void printGraphVizFile(int* parents, int n){
 	cout << "}\n";
 }
 
+void printSampleTrees(vector<int*> list, int n, string fileName){
+	if(list.size()==0){ return;}
+	std::stringstream a;
+	for(int i=0; i<list.size(); i++){
+		for(int j=0; j<n; j++){
+			a << list[i][j];
+			if(j<n-1){
+				a  << " ";
+			}
+		}
+		a << "\n";
+	}
+	writeToFile(a.str(), fileName);
+	cout << "Trees written to: " << fileName;
+}
 
 /* prints the score of the tree predicted by the Kim&Simon approach for the given error log scores */
 void printScoreKimSimonTree(int n, int m, double** logScores, int** dataMatrix, char scoreType){

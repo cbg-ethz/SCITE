@@ -32,7 +32,7 @@ using namespace std;
 
 
 
-double runMCMC(std::vector<int*>& bestTrees, double* errorRates, int noOfReps, int noOfLoops, double gamma, std::vector<double> moveProbs, int n, int m, int** dataMatrix, char scoreType, int* trueParentVec){
+double runMCMC(std::vector<int*>& bestTrees, double* errorRates, int noOfReps, int noOfLoops, double gamma, std::vector<double> moveProbs, int n, int m, int** dataMatrix, char scoreType, int* trueParentVec, std::vector<int*>& sampleTrees, int step, bool sample){
 
 	double ** logScores = getLogScores(errorRates[0], errorRates[1], errorRates[2], errorRates[3]);    // compute logScores of conditional probabilities
 	//printLogScores(logScores);
@@ -53,6 +53,10 @@ double runMCMC(std::vector<int*>& bestTrees, double* errorRates, int noOfReps, i
         	int nbhcorrection = 1;
         	int* propTreeParVec = proposeNextTreeFast(moveProbs, n, currTreeAncMatrix, currTreeParentVec, nbhcorrection); // propose a new tree from neighborhood of current tree
         	double propTreeLogScore = scoreTree( n, m, logScores, dataMatrix, scoreType, propTreeParVec, bestTreeLogScore);   //   compute the score of the new tree
+
+        	if(sample==true && it % step == 0){
+        		sampleTrees.push_back(deepCopy_intArray(propTreeParVec, n));
+        	}
 
         	if (sample_0_1() < nbhcorrection*exp((propTreeLogScore-currTreeLogScore)*gamma)){       // the proposed tree is accepted
   			    free_boolMatrix(currTreeAncMatrix);                                            // discard outdated tree

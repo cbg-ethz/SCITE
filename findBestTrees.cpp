@@ -29,6 +29,7 @@ int** getDataMatrix(int n, int m, string fileName);
 double* getErrorRatesArray(double fd, double ad1, double ad2, double cc);
 int readParameters(int argc, char* argv[]);
 string getOutputFilePrefix(string fileName, string outFile);
+string getFileName(string prefix, string ending);
 string getFileName2(int i, string prefix, string ending);
 vector<string> getGeneNames(string fileName, int nOrig);
 vector<double> setMoveProbs();
@@ -50,7 +51,9 @@ double gamma;
 double fd;          // rate of false discoveries (false positives 0->1)
 double ad1;          // rate of allelic dropout (false negatives 1->0)
 double ad2 = 0.0;         // rate of allelic dropout (2->1)
-double cc;          // rate of falsely discovered homozygous mutations (0->2)
+double cc = 0.0;          // rate of falsely discovered homozygous mutations (0->2)
+bool sample = false;
+int sampleStep;
 bool useGeneNames = false;        // use gene names in tree plotting
 string geneNameFile;              // file where the gene names are listed.
 bool trueTreeComp = false;      // set to true if true tree is given as parameter for comparison
@@ -84,9 +87,11 @@ int main(int argc, char* argv[])
 		trueParentVec = getParentVectorFromGVfile(trueTreeFileName, n);
 	}
 
+	std::vector<int*> sampleTrees;                    // list where tree samples are stored, if sampling based on posterior distribution is needed
+
 	/***  Find best scoring trees by MCMC  ***/
 	//cout << "running MCMC now...\n";
-	bestScore = runMCMC(optimalTrees, errorRates, rep, loops, gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec);
+	bestScore = runMCMC(optimalTrees, errorRates, rep, loops, gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec, sampleTrees, sampleStep, sample);
 
 	cout << "best score: " << bestScore << "\n";
 
@@ -97,6 +102,7 @@ int main(int argc, char* argv[])
 	string prefix = getOutputFilePrefix(fileName, outFile);
 	for(int i=0; i<optimalTrees.size(); i++){
 		string outputFile = getFileName2(i, prefix, ".newick");
+		//cout << outputFile << "\n";
 		int* parentVector = optimalTrees.at(i);
 		vector<vector<int> > childLists = getChildListFromParentVector(parentVector, trueN);
 		stringstream newick;
@@ -111,6 +117,9 @@ int main(int argc, char* argv[])
 		delete [] logScores;
 		writeToFile(output, outputFile);
 	}
+
+	printSampleTrees(sampleTrees, n, getFileName(getOutputFilePrefix(fileName, outFile), ".sample"));
+
 
 	emptyVectorFast(optimalTrees, n);
 	delete [] errorRates;
@@ -183,6 +192,11 @@ string getOutputFilePrefix(string fileName, string outFile){
 }
 
 
+string getFileName(string prefix, string ending){
+	stringstream fileName;
+	fileName << prefix << ending;
+	return fileName.str();
+}
 
 string getFileName2(int i, string prefix, string ending){
 	stringstream fileName;
@@ -226,7 +240,12 @@ int readParameters(int argc, char* argv[]){
 			if (i + 1 < argc) { cc = atof(argv[++i]);}
 		} else if (strcmp(argv[i], "-a")==0) {
 			attachSamples = true;
-		} else if (strcmp(argv[i], "-names")==0) {
+		} else if(strcmp(argv[i], "-p")==0) {
+			if (i + 1 < argc) {
+				sampleStep = atoi(argv[++i]);
+				sample = true;
+			}
+		}else if (strcmp(argv[i], "-names")==0) {
 			useGeneNames = true;
 			if (i + 1 < argc) { geneNameFile = argv[++i];}
 		} else if (strcmp(argv[i],"-s")==0) {
