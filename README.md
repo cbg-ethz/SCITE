@@ -85,8 +85,16 @@ the true tree (in GraphViz format) can be specified to compare the
 predicted trees internally with the true tree.
 
 ##  Output Files
-ML trees are each written to files in GraphViz and Newick format. Files are numbered
+
+### 1. ML/MAP trees
+
+ML/MAP trees are written to files in GraphViz and Newick format. Files are numbered
 consecutively (e.g. dataKimSimon_ml1.gv, dataKimSimon_ml1.newick, dataKimSimon_ml2.gv, dataKimSimon_ml2.newick, ...). The base name of the output file is derived from the name of the input file (unless a different name is specified via `-o <filename>`).
+
+### 2. Trees sampled from the posterior distribution (optional)
+
+When the `-p <INT>` option is set, **SCITE** samples from the posterior distribution, and writes the sampled trees to a single file using the parent vector format (one tree per line). The name of the output file is derived from the input file name using the ending *.sample*.
+
 
 
 ## Parameters
@@ -126,6 +134,10 @@ consecutively (e.g. dataKimSimon_ml1.gv, dataKimSimon_ml1.newick, dataKimSimon_m
 `-s` Setting this option causes the sample attachment points (i. e. where the cells would attach to the tree) to be marginalized out.
 
 `-a` When setting this option, **SCITE** adds the individual cells as additional nodes (leafs) to the reported trees. Cells are attached where they fit best in the given tree (with respect to the error rates). By default, only the mutation tree is reported.
+
+`-p <INT>` When setting this option, **SCITE** samples from the posterior distribution, and writes the trees to a file using the parent vector format. The value of \<INT\> specifies how dense the sampling is. The name of the output file is derived from the input file name using the ending *.sample*.
+
+To make sure that **SCITE** samples from the posterior distribution `-p <INT>` needs to be combined with `-s` (single cell attachment to the tree is marginalized out) and `-g 1` (gamma is set to 1).
 
 `-t <filename>`  Replace \<filename\> with a file containing the true tree in GraphViz format.
 
