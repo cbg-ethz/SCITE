@@ -40,6 +40,9 @@ void printGeneFrequencies(int** dataMatrix, int n, int m, vector<string> geneNam
 static double move1_prob = 0.1;
 static double move2_prob = 0.65;
 static double move3_prob = 0.25;
+double errorRateMove = 0.0;
+double chi = 10;
+double priorSd = 0.1;
 string fileName;      // data file
 string outFile;       // the name of the outputfile, only the prefix before the dot
 int n;                // number of genes
@@ -91,9 +94,15 @@ int main(int argc, char* argv[])
 
 	/***  Find best scoring trees by MCMC  ***/
 	//cout << "running MCMC now...\n";
-	bestScore = runMCMC(optimalTrees, errorRates, rep, loops, gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec, sampleTrees, sampleStep, sample);
+	if(errorRateMove == 0.0){
+		bestScore = runMCMC(optimalTrees, errorRates, rep, loops, gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec, sampleTrees, sampleStep, sample);
+	}
+	else{
+		bestScore = runMCMCbeta(optimalTrees, errorRates, rep, loops, gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec, sampleTrees, sampleStep, sample, chi, priorSd);
+	}
 
-	cout << "best score: " << bestScore << "\n";
+
+	//cout << "best score: " << bestScore << "\n";
 
     /***  output results  ***/
 
@@ -118,7 +127,7 @@ int main(int argc, char* argv[])
 		writeToFile(output, outputFile);
 	}
 
-	printSampleTrees(sampleTrees, n, getFileName(getOutputFilePrefix(fileName, outFile), ".sample"));
+	//printSampleTrees(sampleTrees, n, getFileName(getOutputFilePrefix(fileName, outFile), ".sample"));
 
 
 	emptyVectorFast(optimalTrees, n);
@@ -127,7 +136,7 @@ int main(int argc, char* argv[])
   		clock_t end=clock();
   		double diffticks=end-begin;
   		double diffms=(diffticks*1000)/CLOCKS_PER_SEC;
-  		cout << "Time elapsed: " << diffms << " ms"<< endl;
+  		//cout << "Time elapsed: " << diffms << " ms"<< endl;
   	/****************************************************/
 
   	free_intMatrix(dataMatrix);
@@ -238,6 +247,12 @@ int readParameters(int argc, char* argv[]){
 			}
 		} else if(strcmp(argv[i],"-cc")==0) {
 			if (i + 1 < argc) { cc = atof(argv[++i]);}
+		} else if(strcmp(argv[i],"-e")==0) {
+					if (i + 1 < argc) { errorRateMove = atof(argv[++i]);}
+		} else if(strcmp(argv[i],"-x")==0) {
+							if (i + 1 < argc) { chi = atof(argv[++i]);}
+		} else if(strcmp(argv[i],"-sd")==0) {
+									if (i + 1 < argc) { priorSd = atof(argv[++i]);}
 		} else if (strcmp(argv[i], "-a")==0) {
 			attachSamples = true;
 		} else if(strcmp(argv[i], "-p")==0) {
@@ -261,9 +276,10 @@ int readParameters(int argc, char* argv[]){
 
 vector<double> setMoveProbs(){
 	vector<double> moveProbs;
-	moveProbs.push_back(move1_prob);
-	moveProbs.push_back(move2_prob);
-	moveProbs.push_back(move3_prob);
+	moveProbs.push_back(move1_prob*(1-errorRateMove));
+	moveProbs.push_back(move2_prob*(1-errorRateMove));
+	moveProbs.push_back(move3_prob*(1-errorRateMove));
+	moveProbs.push_back(errorRateMove);
 	return moveProbs;
 }
 
@@ -303,8 +319,8 @@ vector<string> getGeneNames(string fileName, int nOrig){
 	n = nOrig;
 
 	if (!in) {
-		cout << "Cannot open gene names file " << fileName << ", ";
-	    cout << "using ids instead.\n";
+		//cout << "Cannot open gene names file " << fileName << ", ";
+	    //cout << "using ids instead.\n";
 	    vector<string> empty;
 	    for(int i=0; i<=n; i++){
 	    	stringstream id;

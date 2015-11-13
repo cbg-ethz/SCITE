@@ -8,7 +8,8 @@
 //#include <string>
 //#include <random>
 #include "rand.h"
-
+#include <iostream>
+#include <random>
 #include <stdlib.h>
 #include <time.h>
 #include "matrices.h"
@@ -38,7 +39,7 @@ int* getRandTreeCode(int n){                // as usual n is the number of mutat
 }
 
 
-int sampleRandomMove(std::vector<double> prob){    // only for testing program without R, probabilities are not exact
+int sampleRandomMove(std::vector<double> prob){ // picks randomly one of the moves based on the move probabilities
 
     double percent = rand() % 100;
     double sum = prob[0];

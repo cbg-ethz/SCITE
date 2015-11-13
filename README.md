@@ -132,3 +132,11 @@ consecutively (e.g. dataKimSimon_ml1.gv, dataKimSimon_ml1.newick, dataKimSimon_m
 `-names <filename>` Replace \<filename\> with a file listing the mutation names.
 
 `-o <filename>`   Replace \<filename\> with the desired base of the output file to overwrite the default output file names.
+
+##### Error learning
+
+`-e <double>`   Invokes the learning of error rate beta. Set \<double\> to a value between zero and one to specify the probability to chose the move for changing the error rate in the MCMC.
+
+`-x <double>`   Scaling of the known error rate for the MH jump (default is 10).
+
+`-sd <double>`  Prior standard deviation for AD error rate (default is 0.1). For the mean, the error rate specified after `-ad` is used.

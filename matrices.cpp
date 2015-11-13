@@ -250,9 +250,30 @@ int** deepCopy_intMatrix(int** matrix, int n, int m){
     return deepCopy;
 }
 
+double** deepCopy_doubleMatrix(double** matrix, int n, int m){
+    double** deepCopy = init_doubleMatrix(n,m, -1);
+    for (int i=0; i<n; i++)
+    {
+        for (int j=0; j<m; j++)
+        {
+    	      deepCopy[i][j] = matrix[i][j];
+	      }
+    }
+    return deepCopy;
+}
+
 int* deepCopy_intArray(int* array, int n){
 	  int* deepCopy = new int[n];
 	  for (int i=0; i<n; ++i)
+    {
+        deepCopy[i] = array[i];
+    }
+    return deepCopy;
+}
+
+double* deepCopy_doubleArray(double* array, int n){
+	double* deepCopy = new double[n];
+	for (int i=0; i<n; ++i)
     {
         deepCopy[i] = array[i];
     }

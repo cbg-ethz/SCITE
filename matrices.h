@@ -28,6 +28,8 @@ void free_doubleMatrix(double** matrix);
 bool** deepCopy_boolMatrix(bool** matrix, int n, int m);
 int** deepCopy_intMatrix(int** matrix, int n, int m);
 int* deepCopy_intArray(int* array, int n);
+double* deepCopy_doubleArray(double* array, int n);
+double** deepCopy_doubleMatrix(double** matrix, int n, int m);
 void print_boolMatrix(bool** array, int n, int m);
 void print_doubleMatrix(double** matrix, int n, int m);
 void print_intMatrix(int** matrix, int n, int m, char del);
