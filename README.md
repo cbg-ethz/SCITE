@@ -129,7 +129,7 @@ When the `-p <INT>` option is set, **SCITE** samples from the posterior distribu
 
 `-ad <DOUBLE> <DOUBLE>` Set the first \<DOUBLE\> to the estimated rate of missed heterozygous mutations in the sequencing experiment and set the second \<DOUBLE\> to the estimated rate of heterozygous mutations called as homozygous mutations (dropout of the wildtype allele).
 
-`-cc <DOUBLE>` Set \<DOUBLE\> to the estimated rate of homozygous mutations missed in the sequencing experiment.
+`-cc <DOUBLE>` Set \<DOUBLE\> to the estimated rate of non-mutated sites called as homozygous mutations.
 
 
 
