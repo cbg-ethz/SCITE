@@ -62,6 +62,8 @@ string geneNameFile;              // file where the gene names are listed.
 bool trueTreeComp = false;      // set to true if true tree is given as parameter for comparison
 string trueTreeFileName;      // optional true tree
 bool attachSamples = false;       // attach samples to the tree
+bool useFixedSeed = false;      // use a predefined seed for the random number generator
+unsigned int fixedSeed = 1;
 
 int main(int argc, char* argv[])
 {
@@ -91,6 +93,14 @@ int main(int argc, char* argv[])
 	}
 
 	std::vector<int*> sampleTrees;                    // list where tree samples are stored, if sampling based on posterior distribution is needed
+
+	/* initialize the random number generator, either with a user defined seed, or a random number */
+	if(useFixedSeed){
+		srand(fixedSeed);
+	}
+	else{
+		initRand();                                  // initialize random number generator
+	}
 
 	/***  Find best scoring trees by MCMC  ***/
 	//cout << "running MCMC now...\n";
@@ -263,6 +273,9 @@ int readParameters(int argc, char* argv[]){
 		}else if (strcmp(argv[i], "-names")==0) {
 			useGeneNames = true;
 			if (i + 1 < argc) { geneNameFile = argv[++i];}
+		}else if (strcmp(argv[i], "-seed")==0) {
+			useFixedSeed = true;
+			if (i + 1 < argc) { fixedSeed = atoi(argv[++i]);}
 		} else if (strcmp(argv[i],"-s")==0) {
 			sumScore = true;
 		} else {

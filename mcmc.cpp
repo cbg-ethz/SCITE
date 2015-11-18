@@ -43,7 +43,7 @@ double runMCMC(std::vector<int*>& bestTrees, double* errorRates, int noOfReps, i
 
 	double ** logScores = getLogScores(errorRates[0], errorRates[1], errorRates[2], errorRates[3]);    // compute logScores of conditional probabilities
 	//printLogScores(logScores);
-	initRand();                                  // initialize random number generator
+	//initRand();                                  // initialize random number generator
 	int minDist = INT_MAX;                        // initialize distance to true tree if given
 	double bestTreeLogScore = -DBL_MAX;          // initialize best tree score
 
