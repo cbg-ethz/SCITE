@@ -30,7 +30,9 @@ To compile the C/C++ program, open a terminal and go to the folder containing th
 
 	clang++ findBestTrees.cpp matrices.cpp mcmc.cpp output.cpp rand.cpp scoreTree.cpp treelist.cpp trees.cpp -o scite
 
-This writes a file named `scite`. Assuming the sample data file dataKimSimon.csv is located in the same folder, `scite` can then be executed as follows
+This writes a file named `scite`. With older compiler versions you may need to use the option `-std=c++11`.
+
+Assuming the sample data file dataKimSimon.csv is located in the same folder, `scite` can then be executed as follows
 
 	./scite -i dataKimSimon.csv -n 18 -m 58 -r 1 -l 900000 -g 1.25 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
 
@@ -42,7 +44,9 @@ To compile the C/C++ program, open a terminal and go to the folder containing th
 
 	g++ findBestTrees.cpp matrices.cpp mcmc.cpp output.cpp rand.cpp scoreTree.cpp treelist.cpp trees.cpp -o scite
 
-This writes a file named `scite`. Assuming the sample data file dataKimSimon.csv is located in the same folder, `scite` can then be executed as follows
+This writes a file named `scite`. With older compiler versions you may need to use the option `-std=c++11`.
+
+Assuming the sample data file dataKimSimon.csv is located in the same folder, `scite` can then be executed as follows
 
 	./scite -i dataKimSimon.csv -n 18 -m 58 -r 1 -l 900000 -g 1.25 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
 
@@ -123,7 +127,7 @@ When the `-p <INT>` option is set, **SCITE** samples from the posterior distribu
 
 `-fd <DOUBLE>` Set \<DOUBLE\> to the estimated false positive rate (false calling of heterozygous mutation) of the sequencing. experiment
 
-`-ad <DOUBLE> <DOUBLE>` Set the first \<DOUBLE\> to the estimated rate of missed heterozygous mutations in the sequencing experiment and set the second \<DOUBLE\> to the estimated rate of homozygous mutations called as heterozygous mutations.
+`-ad <DOUBLE> <DOUBLE>` Set the first \<DOUBLE\> to the estimated rate of missed heterozygous mutations in the sequencing experiment and set the second \<DOUBLE\> to the estimated rate of heterozygous mutations called as homozygous mutations (dropout of the wildtype allele).
 
 `-cc <DOUBLE>` Set \<DOUBLE\> to the estimated rate of homozygous mutations missed in the sequencing experiment.
 
