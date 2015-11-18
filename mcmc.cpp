@@ -22,6 +22,7 @@
 #include "mcmc.h"
 #include "scoreTree.h"
 #include "rand.h"
+#include "limits.h"
 
 using namespace std;
 //default_random_engine generator;
