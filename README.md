@@ -149,6 +149,8 @@ To make sure that **SCITE** samples from the posterior distribution `-p <INT>` n
 
 `-o <filename>`   Replace \<filename\> with the desired base of the output file to overwrite the default output file names.
 
+`-seed <INT>`   Replace \<INT\> with a positive integer to be used as a fixed seed for the random number generator.
+
 ##### Error learning
 
 `-e <double>`   Invokes the learning of error rate beta. Set \<double\> to a value between zero and one to specify the probability to chose the move for changing the error rate in the MCMC.
