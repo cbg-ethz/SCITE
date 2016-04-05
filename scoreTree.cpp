@@ -197,6 +197,7 @@ double getSumAttachmentScoreAccurate(int* parent, int n, double** logScores, int
 		sumScore += exp(attachmentScore[parent]-bestScore);
 	}
 	delete_3D_intMatrix(attachmentScoreMatrix, n+1);
+	delete [] attachmentScore;
 	return log(sumScore)+bestScore;
 }
 
@@ -312,7 +313,7 @@ void printLogScores(double** logScores){
 	cout.precision(70);
 	for(int i=0; i<4; i++){
 		for(int j=0; j<2; j++){
-			cout << logScores[i][j] << "\t"; //printf("%f\t",matrix[i][j]);
+			cout << logScores[i][j] << "\t";
 		}
 		cout << "\n";
 	}

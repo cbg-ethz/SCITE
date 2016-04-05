@@ -9,7 +9,11 @@
 #define TREES_H_
 using namespace std;
 
+std::vector<int> getDescendants(bool** ancMatrix, int node, int n);
+std::vector<int> getNonDescendants(bool**& ancMatrix, int node, int n);
+int countBranches(int* parents, int length);
 vector<vector<int> > getChildListFromParentVector(int* parents, int n);
+void deleteChildLists(vector<vector<int> > &childLists);
 string getNewickCode(vector<vector<int> > list, int root);
 int* prueferCode2parentVector(int* code, int codeLength);
 int* getBreadthFirstTraversal(int* parent, int n);
@@ -22,5 +26,6 @@ void updateQueue(int node, bool* queue, int next);
 int updateQueueCutter(int node, bool* queue, int next);
 int* starTreeVec(int n);
 bool** starTreeMatrix(int n);
+int* reverse(int* array, int length);
 
 #endif /* TREES_H_ */

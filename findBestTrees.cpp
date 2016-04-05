@@ -30,27 +30,30 @@ double* getErrorRatesArray(double fd, double ad1, double ad2, double cc);
 int readParameters(int argc, char* argv[]);
 string getOutputFilePrefix(string fileName, string outFile);
 string getFileName(string prefix, string ending);
-string getFileName2(int i, string prefix, string ending);
+string getFileName2(int i, string prefix, string ending, char scoreType);
 vector<string> getGeneNames(string fileName, int nOrig);
 vector<double> setMoveProbs();
 int* getParentVectorFromGVfile(string fileName, int n);
 int getMinDist(int* trueVector, std::vector<bool**> optimalTrees, int n);
 void printGeneFrequencies(int** dataMatrix, int n, int m, vector<string> geneNames);
 
-static double move1_prob = 0.1;
-static double move2_prob = 0.65;
-static double move3_prob = 0.25;
+
+double defaultMoveProbs[] = {0.55, 0.4, 0.05};     // moves: change beta / prune&re-attach / swap node labels / swap subtrees
+double defaultMoveProbsBin[] = {0.4, 0.6};    // moves: change beta / prune&re-attach / swap leaf labels
+
+
 double errorRateMove = 0.0;
+vector<double> treeMoves;
 double chi = 10;
 double priorSd = 0.1;
 string fileName;      // data file
 string outFile;       // the name of the outputfile, only the prefix before the dot
 int n;                // number of genes
 int m;                // number of samples
-bool sumScore = false;
+char scoreType = 'm';
 int rep;            // number of repetitions of the MCMC
 int loops;          // number of loops within a MCMC
-double gamma;
+double gamma = 1;
 double fd;          // rate of false discoveries (false positives 0->1)
 double ad1;          // rate of allelic dropout (false negatives 1->0)
 double ad2 = 0.0;         // rate of allelic dropout (2->1)
@@ -60,96 +63,106 @@ int sampleStep;
 bool useGeneNames = false;        // use gene names in tree plotting
 string geneNameFile;              // file where the gene names are listed.
 bool trueTreeComp = false;      // set to true if true tree is given as parameter for comparison
-string trueTreeFileName;      // optional true tree
+string trueTreeFileName;        // optional true tree
 bool attachSamples = false;       // attach samples to the tree
 bool useFixedSeed = false;      // use a predefined seed for the random number generator
-unsigned int fixedSeed = 1;
+unsigned int fixedSeed = 1;   // default seed
+bool useTreeList = true;
+char treeType = 'm';        // the default tree is a mutation tree; other option is 't' for (transposed case), where we have a binary leaf-labeled tree
+int maxTreeListSize = -1;  // defines the maximum size of the list of optimal trees, default -1 means no restriction
 
 int main(int argc, char* argv[])
 {
 
-	/**  read parameters and data file  **/
+	/****************   begin timing  *********************/
+			clock_t begin=clock();
+	/****************************************************/
 
+	std::vector<struct treeBeta> optimalTrees;            // list of optimal tree/beta combinations found by MCMC
+	std::string sampleOutput;                            // the samples taken in the MCMC as a string for outputting
+
+
+
+	/**  read parameters and data file  **/
 	readParameters(argc, argv);
 	int** dataMatrix = getDataMatrix(n, m, fileName);
 	vector<double> moveProbs = setMoveProbs();
 	double* errorRates = getErrorRatesArray(fd, ad1, ad2, cc);
-	char scoreType = 'm';
-	if(sumScore){ scoreType = 's';}
-
-
-	/****************   begin timing  *********************/
-		clock_t begin=clock();
-	/****************************************************/
-
-	std::vector<int*> optimalTrees;          // list of all optimal trees (as ancestor matrices)
-	double bestScore = -DBL_MAX;                          // score of the optimal trees
-
-
-	/* get the true parent vector from GraphViz file if available (for simulated data only)  */
-	int* trueParentVec = NULL;
-	if(trueTreeComp==true){
-		trueParentVec = getParentVectorFromGVfile(trueTreeFileName, n);
-	}
-
-	std::vector<int*> sampleTrees;                    // list where tree samples are stored, if sampling based on posterior distribution is needed
 
 	/* initialize the random number generator, either with a user defined seed, or a random number */
-	if(useFixedSeed){
-		srand(fixedSeed);
-	}
-	else{
-		initRand();                                  // initialize random number generator
-	}
+		useFixedSeed? srand(fixedSeed) : initRand();
 
-	/***  Find best scoring trees by MCMC  ***/
-	//cout << "running MCMC now...\n";
-	if(errorRateMove == 0.0){
-		bestScore = runMCMC(optimalTrees, errorRates, rep, loops, gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec, sampleTrees, sampleStep, sample);
-	}
-	else{
-		bestScore = runMCMCbeta(optimalTrees, errorRates, rep, loops, gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec, sampleTrees, sampleStep, sample, chi, priorSd);
-	}
+	/** get the true parent vector from GraphViz file if available (for simulated data only)  **/
+	int* trueParentVec = NULL;
+	if(trueTreeComp==true){ trueParentVec = getParentVectorFromGVfile(trueTreeFileName, n); }
+
+	/**  Find best scoring trees by MCMC  **/
+	sampleOutput = runMCMCbeta(optimalTrees, errorRates, rep, loops, gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec, sampleStep, sample, chi, priorSd, useTreeList, treeType);
 
 
-	//cout << "best score: " << bestScore << "\n";
-
-    /***  output results  ***/
-
-	int trueN = n;
+	/***  output results  ***/
 
 	string prefix = getOutputFilePrefix(fileName, outFile);
-	for(int i=0; i<optimalTrees.size(); i++){
-		string outputFile = getFileName2(i, prefix, ".newick");
-		//cout << outputFile << "\n";
-		int* parentVector = optimalTrees.at(i);
-		vector<vector<int> > childLists = getChildListFromParentVector(parentVector, trueN);
+
+	/* output the samples taken in the MCMC */
+	stringstream sampleOutputFile;
+	sampleOutputFile << prefix << ".samples";
+	writeToFile(sampleOutput, sampleOutputFile.str());
+	cout << "samples from posterior written to: " << sampleOutputFile.str() << "\n";
+
+	/* output the optimal trees found in individual files */
+
+	double** logScores = getLogScores(fd, ad1, ad2, cc);
+	int parentVectorSize = n;
+	if(treeType=='t'){parentVectorSize = (2*m)-2;}                     // transposed case: binary tree, m leafs and m-1 inner nodes, root has no parent
+	int outputSize = optimalTrees.size();
+	if(maxTreeListSize >=0) {outputSize = maxTreeListSize;}            // there is a limit on the number of trees to output
+	for(int i=0; i<outputSize; i++){
+
+		int* parentVector = optimalTrees.at(i).tree;
+		bool** ancMatrix = parentVector2ancMatrix(parentVector, parentVectorSize);
+		vector<vector<int> > childLists = getChildListFromParentVector(parentVector, parentVectorSize);
+
 		stringstream newick;
-		newick << getNewickCode(childLists, trueN) << "\n";
+		string outputFile = getFileName2(i, prefix, ".newick", scoreType);
+		newick << getNewickCode(childLists, parentVectorSize) << "\n";
 		writeToFile(newick.str(), outputFile);
-		outputFile = getFileName2(i, prefix, ".gv");
-		double** logScores = getLogScores(fd, ad1, ad2, cc);
-		bool** ancMatrix = parentVector2ancMatrix(parentVector, trueN);
-		string output = getGraphVizFileContentNames(parentVector, trueN, getGeneNames(geneNameFile, n), attachSamples, ancMatrix, m, logScores, dataMatrix);
+		outputFile = getFileName2(i, prefix, ".gv", scoreType);	                                // print out tree as newick code
+
+		if(errorRateMove != 0.0){
+			updateLogScores(logScores, optimalTrees[i].beta);
+		}
+
+		if(treeType == 'm'){
+			string output;
+			output = getGraphVizFileContentNames(parentVector, parentVectorSize, getGeneNames(geneNameFile, n), attachSamples, ancMatrix, m, logScores, dataMatrix);
+			writeToFile(output, outputFile);
+		}
+		else{
+			int* bestPlacement = getHighestOptPlacementVector(dataMatrix, n, m, logScores, ancMatrix);
+			vector<string> names = getGeneNames(geneNameFile, n);
+			vector<string> bestBinTreeLabels = getBinTreeNodeLabels((2*m)-1, bestPlacement, n, getGeneNames(geneNameFile, n));
+			//cout << getGraphVizBinTree(optimalTrees.at(0).tree, (2*m)-1, m, bestBinTreeLabels);
+		}
+
 		free_boolMatrix(ancMatrix);
-		delete [] logScores[0];
-		delete [] logScores;
-		writeToFile(output, outputFile);
+
 	}
 
-	//printSampleTrees(sampleTrees, n, getFileName(getOutputFilePrefix(fileName, outFile), ".sample"));
-
-
-	emptyVectorFast(optimalTrees, n);
+	delete [] logScores[0];
+	delete [] logScores;
 	delete [] errorRates;
+	free_intMatrix(dataMatrix);
+	cout << optimalTrees.size() << " opt trees \n";
+	emptyVectorFast(optimalTrees, n);
+
+
 	/****************   end timing  *********************/
   		clock_t end=clock();
   		double diffticks=end-begin;
   		double diffms=(diffticks*1000)/CLOCKS_PER_SEC;
-  		//cout << "Time elapsed: " << diffms << " ms"<< endl;
+  		cout << "Time elapsed: " << diffms << " ms"<< endl;
   	/****************************************************/
-
-  	free_intMatrix(dataMatrix);
 }
 
 
@@ -217,9 +230,14 @@ string getFileName(string prefix, string ending){
 	return fileName.str();
 }
 
-string getFileName2(int i, string prefix, string ending){
+string getFileName2(int i, string prefix, string ending, char scoreType){
 	stringstream fileName;
-	fileName << prefix << "_ml" << i << ending;
+	if(scoreType == 'm'){
+		fileName << prefix << "_ml" << i << ending;
+	}
+	else{
+		fileName << prefix << "_map" << i << ending;
+	}
 	return fileName.str();
 }
 
@@ -273,11 +291,29 @@ int readParameters(int argc, char* argv[]){
 		}else if (strcmp(argv[i], "-names")==0) {
 			useGeneNames = true;
 			if (i + 1 < argc) { geneNameFile = argv[++i];}
+		}else if (strcmp(argv[i], "-move_probs")==0) {
+			vector<double> newMoveProbs;
+			if (i + 1 < argc) { treeMoves.push_back(atof(argv[++i]));}
+			if (i + 1 < argc) { treeMoves.push_back(atof(argv[++i]));}
+			if (i + 1 < argc){
+				string next = argv[i+1];
+				if(next.compare(0, 1, "-") != 0){
+					treeMoves.push_back(atof(argv[++i]));
+				}
+			}
+			//cout << move1_prob << " " << move2_prob << " " << move3_prob << "\n";
+
 		}else if (strcmp(argv[i], "-seed")==0) {
 			useFixedSeed = true;
 			if (i + 1 < argc) { fixedSeed = atoi(argv[++i]);}
+		}else if (strcmp(argv[i], "-max_treelist_size")==0) {
+					if (i + 1 < argc) { maxTreeListSize = atoi(argv[++i]);}
+		} else if (strcmp(argv[i],"-no_tree_list")==0) {
+					useTreeList = false;
 		} else if (strcmp(argv[i],"-s")==0) {
-			sumScore = true;
+			scoreType = 's';
+		} else if (strcmp(argv[i],"-transpose")==0) {
+					treeType = 't';
 		} else {
 			std::cerr << "unknown parameter " << argv[i] << std::endl;
 			return 1;
@@ -289,10 +325,37 @@ int readParameters(int argc, char* argv[]){
 
 vector<double> setMoveProbs(){
 	vector<double> moveProbs;
-	moveProbs.push_back(move1_prob*(1-errorRateMove));
-	moveProbs.push_back(move2_prob*(1-errorRateMove));
-	moveProbs.push_back(move3_prob*(1-errorRateMove));
+
 	moveProbs.push_back(errorRateMove);
+
+	if(treeMoves.size()==0){                                       // use default probabilities
+		if(treeType == 'm'){
+			moveProbs.push_back(defaultMoveProbs[0]);
+			moveProbs.push_back(defaultMoveProbs[1]);
+			moveProbs.push_back(defaultMoveProbs[2]);
+		}
+		else{
+			moveProbs.push_back(defaultMoveProbsBin[0]);
+			moveProbs.push_back(defaultMoveProbsBin[1]);
+		}
+	}
+	else{                                                                            // use probabilities from command line
+		double sum = 0.0;
+		for(int i=0; i< treeMoves.size(); i++){ sum += treeMoves[i]; }
+		if(sum != 1.0){
+			cerr << "move probabilities do not sum to 1.0, recalculating probabilities\n";     // normalize to sum to one
+			for(int i=0; i< treeMoves.size(); i++){
+				treeMoves[i] = treeMoves[i]/sum;
+			}
+			cout << "new move probabilities:";
+			for(int i=0; i< treeMoves.size(); i++){ cout << " " << treeMoves[i];}
+			cout << "\n";
+		}
+		for(int i=0; i< treeMoves.size(); i++){
+			moveProbs.push_back(treeMoves[i]);
+		}
+	}
+	treeMoves.clear();
 	return moveProbs;
 }
 
@@ -319,6 +382,7 @@ int** getDataMatrix(int n, int m, string fileName){
     in.close();
     int** transposedMatrix = transposeMatrix(dataMatrix, n, m);
     free_intMatrix(dataMatrix);
+
     return transposedMatrix;
 }
 
@@ -351,6 +415,7 @@ vector<string> getGeneNames(string fileName, int nOrig){
 	v.push_back("Root"); // the root
 	return v;
 }
+
 
 
 double* getErrorRatesArray(double fd, double ad1, double ad2, double cc){

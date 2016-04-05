@@ -18,7 +18,180 @@
 
 using namespace std;
 
+/* Score contribution by a specific mutation when placed at the root, that means all samples should have it */
+/* This is the same for all trees and can be precomputed */
+double binTreeRootScore(int** obsMutProfiles, int mut, int m, double ** logScores){
+	double score = 0.0;
+	for(int sample=0; sample<m; sample++){
+		score += logScores[obsMutProfiles[sample][mut]][1];
+	}
+	return score;
+}
 
+/* computes the best placement of a mutation, the highest one if multiple co-opt. placements exist*/
+int getHighestOptPlacement(int** obsMutProfiles, int mut, int m, double ** logScores, bool** ancMatrix){
+
+	int nodeCount = (2*m)-1;
+	int bestPlacement = (2*m)-2;   // root
+	double bestPlacementScore = binTreeRootScore(obsMutProfiles, mut, m, logScores);
+	//cout << bestPlacementScore << " (root)\n";
+	//print_boolMatrix(bool** array, int n, int m);
+	for(int p=0; p<nodeCount-1; p++){                           // try all possible placements (nodes in the mutation tree)
+
+		double score = 0.0;                   // score for placing mutation at a specific node
+		for(int sample=0; sample<m; sample++){
+			//cout << p << " " << sample << "\n";
+			if(ancMatrix[p][sample] == 1){
+				score += logScores[obsMutProfiles[sample][mut]][1]; // sample should have the mutation
+			}
+			else{
+				score += logScores[obsMutProfiles[sample][mut]][0]; // sample should not have the mutation
+			}
+		}
+		if(score > bestPlacementScore){
+			bestPlacement = p;
+			bestPlacementScore = score;
+			//cout << bestPlacementScore << " (non-root)\n";
+		}
+		else if (score == bestPlacementScore && ancMatrix[p][bestPlacement] == true){
+			bestPlacement = p;
+		}
+	}
+
+	//if(bestPlacement == (2*m)-2){
+	//	cout<< "best placed at root\n";
+	//	getchar();
+	//}
+	return bestPlacement;
+}
+
+/* computes the best placement of a mutation, the highest one if multiple co-opt. placements exist*/
+int* getHighestOptPlacementVector(int** obsMutProfiles, int n, int m, double ** logScores, bool** ancMatrix){
+	int* bestPlacements = init_intArray(n, -1);
+	for(int mut=0; mut<n; mut++){                                                               // for all mutations get
+		bestPlacements[mut] = getHighestOptPlacement(obsMutProfiles, mut, m, logScores, ancMatrix);         // bestPlacementScore
+	 }
+	//print_intArray(bestPlacements, n);
+	return bestPlacements;
+}
+
+vector<string> getBinTreeNodeLabels(int nodeCount, int* optPlacements, int n, vector<string> geneNames){
+	vector<string> v;
+	int count = 0;
+	for(int i = 0; i < nodeCount; i++){
+		v.push_back("");
+	}
+
+	for(int mut=0; mut<n; mut++){
+		string toAppend;
+		if(v.at(optPlacements[mut]) == ""){
+			toAppend = geneNames.at(mut);
+			count++;
+		}
+		else{
+			toAppend = ", " + geneNames.at(mut);
+			count++;
+		}
+		//cout << "        " << j << "\n";
+		//cout << "                     "<< optPlacements[j] << "\n";
+		v.at(optPlacements[mut]) += toAppend;
+	}
+	if(v.at(nodeCount-1) == ""){
+		v.at(nodeCount-1) = "root";
+	}
+	for(int i = 0; i < nodeCount; i++){
+		if(v.at(i).find(" ") != string::npos){
+			v.at(i) = "\"" + v.at(i) + "\"";
+		}
+	}
+	//cout << "added mutations " << count << "\n";
+	return v;
+}
+
+/* returns the lca of a node that has a non-empty label, the root is assumed to always have a label */
+int getLcaWithLabel(int node, int* parent, vector<string> label, int nodeCount){
+	int root = nodeCount -1;
+	int p = parent[node];;
+	while(p != root && label[p]==""){
+		p = parent[p];
+	}
+	return p;
+}
+
+std::string getGraphVizBinTree(int* parents, int nodeCount, int m, vector<string> label){
+	std::stringstream content;
+	content << "digraph G {\n";
+	content << "node [color=deeppink4, style=filled, fontcolor=white, fontsize=20, fontname=Verdana];\n";
+	for(int i=m; i<nodeCount-1; i++){
+		if(label[i] != ""){
+			int labelledLCA = getLcaWithLabel(i, parents, label, nodeCount);
+			content << label[labelledLCA] << " -> " << label[i] << ";\n";
+//		if(label[parents[i]] == ""){
+//			content  << parents[i] << " -> ";
+//		}
+//		else{
+//			content << label[parents[i]] << " -> ";
+//		}
+//		if(label[i] == ""){
+//		  content  << i << ";\n";
+//		}
+//		else{
+//			content << label[i] << ";\n";
+
+		}
+	}
+	content << "node [color=lightgrey, style=filled, fontcolor=black];\n";
+	for(int i=0; i<m; i++){
+		int labelledLCA = getLcaWithLabel(i, parents, label, nodeCount);
+		content << label[labelledLCA] << " -> " << "s" << i << ";\n";
+
+
+
+//		if(label[parents[i]] == ""){
+//			content << parents[i] << " -> ";
+//		}
+//		else{
+//			content << label[parents[i]] << " -> ";
+//		}
+//
+//		content << "s" << i << ";\n";
+
+
+	}
+	content <<  "}\n";
+	return content.str();
+}
+
+
+
+string getMutTreeGraphViz(vector<string> label, int nodeCount, int m, int* parent){
+	stringstream nodes;
+	stringstream leafedges;
+	stringstream edges;
+	for(int i=0; i<m; i++){
+		if(label.at(i) != ""){
+			nodes << "s" << i << "[label=\"s" << i << "\"];\n";                 // si [label="si"];
+			nodes        << i << "[label=\"" << label.at(i) << "\"];\n";                 //   i [label="i"];
+			leafedges << "s" << i << " -> " << i << ";\n";
+			edges <<        i << " -> " << getLcaWithLabel(i, parent, label, nodeCount) << ";\n";
+		}
+		else{
+			nodes << i << "[label=\"s" << i << "\"];\n";
+			leafedges << i << " -> " << getLcaWithLabel(i, parent, label, nodeCount) << ";\n";
+		}
+	}
+
+	stringstream str;
+
+	str << "digraph g{\n";
+	str << nodes;
+	str << "node [color=deeppink4, style=filled, fontcolor=white];	\n";
+	str << edges;
+	str << "node [color=lightgrey, style=filled, fontcolor=black];  \n";
+	str << leafedges;
+	str << "}\n";
+	return str.str();
+}
 
 /* writes the given string to file */
 void writeToFile(string content, string fileName){

@@ -12,12 +12,17 @@
 #ifndef TREELIST_H
 #define TREELIST_H
 
-bool isDuplicateTreeFast(std::vector<int*> &optimalTrees, int* newTree, int n);
-bool isDuplicateTree(std::vector<bool**> &optimalTrees, bool** newTree, int n);
-double updateListOfBestTrees(double currScore, double bestScore, bool**& propAncMatrix, std::vector<bool**> &optimalTrees, int n);
-void emptyVector(std::vector<bool**> &optimalTrees, int n);
-void emptyVectorFast(std::vector<int*> & optimalTrees, int n);
-void foundBranchingTree(std::vector<bool**> treeList, int n);
-void printParentVectors(std::vector<bool**> optimalTrees, int n, int m, double** logScores, int** dataMatrix);
+struct treeBeta
+{
+	int* tree;
+    double beta;
+};
+
+void updateTreeList(std::vector<struct treeBeta>& bestTrees, int* currTreeParentVec, int n, double currScore, double bestScore, double beta);
+void resetTreeList(std::vector<struct treeBeta>& bestTrees, int* newBestTree, int n, double beta);
+void emptyVectorFast(std::vector<struct treeBeta>& optimalTrees, int n);
+void emptyTreeList(std::vector<int*>& optimalTrees, int n);
+struct treeBeta createNewTreeListElement(int* tree, int n, double beta);
+bool isDuplicateTreeFast(std::vector<struct treeBeta> &optimalTrees, int* newTree, int n);
 
 #endif

@@ -38,18 +38,25 @@ int* getRandTreeCode(int n){                // as usual n is the number of mutat
 	return code;
 }
 
+bool changeBeta(double prob){
+	 double percent = (rand() % 100)+1;    // between 1 and 100
+	 if(percent <= prob*100){
+		 return true;
+	 }
+	 return false;
+}
 
-int sampleRandomMove(std::vector<double> prob){ // picks randomly one of the moves based on the move probabilities
+int sampleRandomMove(std::vector<double> prob){ // picks randomly one of the tree moves based on the move probabilities
 
-    double percent = rand() % 100;
-    double sum = prob[0];
-    for(int i=0; i<prob.size()-1; i++){
-        if(percent <= sum*100){
-          return i+1;
+    double percent = (rand() % 100)+1;    // between 1 and 100
+    double probSum = prob[1];
+    for(int i=1; i<prob.size()-1; i++){    // start at index 1; the probability at prob[0] is for changing the error rate (which is treated separately)
+        if(percent <= probSum*100){
+          return i;
         }
-        sum += prob[i+1];
+        probSum += prob[i+1];
     }
-    return prob.size();
+    return prob.size()-1;
 }
 
 
@@ -84,4 +91,46 @@ double sample_0_1(){
   return ((double) rand() / RAND_MAX);
 }
 
+int getElemFromQueue(int index, std::vector<int> queue){
+	int elem = queue.at(index);
+	if (index != queue.size() - 1)
+	{
+		queue[index] = std::move(queue.back());
+	}
+
+	//cout << queue.size() << " elements in queue in subroutine\n";
+	return elem;
+}
+
+// This creates the parent vector of a random binary tree. Entries 0...m-1 are for the leafs.
+// Entries m....2m-3 are for the inner nodes except the root, the root has index 2m-2 which has no parent
+// and therefore has no entry in the parent vector
+int* getRandomBinaryTree(int m){
+	int parentCount = (2*m)-2;     // the m leafs have a parent and so have m-2 of the m-1 inner nodes
+	int* leafsAndInnerNodesParents = init_intArray(parentCount, -1);
+
+	std::vector<int> queue;
+	for(int i=0; i<m; i++){queue.push_back(i);}   // add the m leafs to the queue
+	//cout << queue.size() << " elements in queue\n";
+	int innerNodeCount = m;
+	while(queue.size()>1){
+		int pos = pickRandomNumber(queue.size());
+		int child1 = queue.at(pos);
+		if (pos != queue.size() - 1){queue[pos] = std::move(queue.back());}
+		queue.pop_back();
+		//cout << queue.size() << " elements in queue\n";
+
+		pos = pickRandomNumber(queue.size());
+		int child2 = queue.at(pos);
+		if (pos != queue.size() - 1){queue[pos] = std::move(queue.back());}
+		queue.pop_back();
+		//cout << queue.size() << " elements in queue\n";
+
+		leafsAndInnerNodesParents[child1] = innerNodeCount;
+		leafsAndInnerNodesParents[child2] = innerNodeCount;
+		queue.push_back(innerNodeCount);
+		innerNodeCount++;
+	}
+	return leafsAndInnerNodesParents;
+}
 

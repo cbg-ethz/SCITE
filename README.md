@@ -7,7 +7,7 @@
 
 **SCITE** is a software package to compute mutation histories of somatic cells.
 Given noisy mutation profiles of single cells, **SCITE** performs a stochastic
-search to find the Maximum Likelihood tree and to sample from the posterior
+search to find the Maximum Likelihood (ML) or Maximum aposterori (MAP) tree and to sample from the posterior
 probability distribution. Tree reconstruction can be combined with an estimation
 of the error rates in the mutation profiles.
 
@@ -28,28 +28,29 @@ infinite sites assumption can be made.
 
 To compile the C/C++ program, open a terminal and go to the folder containing the source files, and type
 
-	clang++ findBestTrees.cpp matrices.cpp mcmc.cpp output.cpp rand.cpp scoreTree.cpp treelist.cpp trees.cpp -o scite
+	clang++ *.cpp -o scite
 
 This writes a file named `scite`. With older compiler versions you may need to use the option `-std=c++11`.
 
 Assuming the sample data file dataKimSimon.csv is located in the same folder, `scite` can then be executed as follows
 
-	./scite -i dataKimSimon.csv -n 18 -m 58 -r 1 -l 900000 -g 1.25 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
+	./scite -i dataHou18.csv -n 18 -m 58 -r 1 -l 900000 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
 
-
+This call computes the ML tree(s) for the given dataset and parameter settings. See below for other program options.
 
 ### Linux/Unix
 
 To compile the C/C++ program, open a terminal and go to the folder containing the source files, and type
 
-	g++ findBestTrees.cpp matrices.cpp mcmc.cpp output.cpp rand.cpp scoreTree.cpp treelist.cpp trees.cpp -o scite
-
+	g++ *.cpp -o scite
+	
 This writes a file named `scite`. With older compiler versions you may need to use the option `-std=c++11`.
 
 Assuming the sample data file dataKimSimon.csv is located in the same folder, `scite` can then be executed as follows
 
-	./scite -i dataKimSimon.csv -n 18 -m 58 -r 1 -l 900000 -g 1.25 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
+	./scite -i dataHou18.csv -n 18 -m 58 -r 1 -l 900000 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
 
+This call computes the ML tree(s) for the given dataset and parameter settings. See below for other program options.
 
 ##  Input Files
 
@@ -67,19 +68,22 @@ The entry at position [i,j] should be
 * 1 if mutation i is observed in cell j, or
 * 3 if the data point is missing
 
-	
+The sample datasets dataNavin.csv and dataXu.csv have this format.	
 #### (b) Heterozygous and homozygous mutations distinguished
+The entry at position [i,j] should be
 
 * 0 if mutation i is not observed in cell j,
 * 1 if heterozygous mutation i is observed in cell j
 * 2 if homozygous mutation i is observed in cell j
 * 3 if the data point is missing
 
+The sample datasets dataHou18.csv and dataHou78.csv have this format
+
 ### 2. Mutation names (optional)
 
 
-A list specifying the names the mutations, e.g. the name of the gene in which
-the mutation occurs. If not specified, the mutations are numbered from 1 to n.
+A list specifying the names of the mutations, e.g. the name of the gene in which
+the mutation occurs. For the sample datasets provided here, these files have the extension *.geneNames*. If no such file is specified, the mutations are numbered from 1 to n.
 
 ### 3. The true tree (optional)
 
@@ -93,11 +97,11 @@ predicted trees internally with the true tree.
 ### 1. ML/MAP trees
 
 ML/MAP trees are written to files in GraphViz and Newick format. Files are numbered
-consecutively (e.g. dataKimSimon_ml1.gv, dataKimSimon_ml1.newick, dataKimSimon_ml2.gv, dataKimSimon_ml2.newick, ...). The base name of the output file is derived from the name of the input file (unless a different name is specified via `-o <filename>`).
+consecutively (e.g. dataHou18_ml1.gv, dataHou18_ml1.newick, dataHou18_ml2.gv, dataHou18_ml2.newick, ...). The base name of the output file is derived from the name of the input file (unless a different name is specified via `-o <filename>`).
 
-### 2. Trees sampled from the posterior distribution (optional)
+### 2. Samples from the posterior distribution (optional)
 
-When the `-p <INT>` option is set, **SCITE** samples from the posterior distribution, and writes the sampled trees to a single file using the parent vector format (one tree per line). The name of the output file is derived from the input file name using the ending *.sample*.
+When the `-p <INT>` option is set, **SCITE** samples from the posterior distribution, and writes the sampled trees (in parent vector format) together with their scores and learned error rates to a single file (one sample per line). The name of the output file is derived from the input file name using the ending *.sample*.
 
 
 
@@ -112,8 +116,6 @@ When the `-p <INT>` option is set, **SCITE** samples from the posterior distribu
 `-r <INT>`  Set \<INT\> to the desired number of repetitions of the MCMC.
 
 `-l <INT>`  Set \<INT\> to the desired chain length of each MCMC repetition
-
-`-g <DOUBLE>` Set \<DOUBLE\> to the desired value of gamma for ML computation (gamma > 1: more local exploration, possibly local optimum; gamma < 1: easier to explore the space, but less deeply); gamma needs to equal 1 to be able to sample from the posterior distribution
 
 
 
@@ -133,11 +135,13 @@ When the `-p <INT>` option is set, **SCITE** samples from the posterior distribu
 
 
 
-##### Optional parameters
+### Optional parameters
 
 `-s` Setting this option causes the sample attachment points (i. e. where the cells would attach to the tree) to be marginalized out.
 
-`-a` When setting this option, **SCITE** adds the individual cells as additional nodes (leafs) to the reported trees. Cells are attached where they fit best in the given tree (with respect to the error rates). By default, only the mutation tree is reported.
+`-g <DOUBLE>` Set \<DOUBLE\> to the desired value of gamma for ML computation (gamma > 1: more local exploration, possibly local optimum; gamma < 1: easier to explore the space, but less deeply); gamma needs to equal 1 to be able to sample from the posterior distribution
+
+
 
 `-p <INT>` When setting this option, **SCITE** samples from the posterior distribution, and writes the trees to a file using the parent vector format. The value of \<INT\> specifies how dense the sampling is. The name of the output file is derived from the input file name using the ending *.sample*.
 
@@ -145,11 +149,15 @@ To make sure that **SCITE** samples from the posterior distribution `-p <INT>` n
 
 `-t <filename>`  Replace \<filename\> with a file containing the true tree in GraphViz format.
 
-`-names <filename>` Replace \<filename\> with a file listing the mutation names.
+`-seed <INT>`   Replace \<INT\> with a positive integer to be used as a fixed seed for the random number generator.
+
+##### Output
 
 `-o <filename>`   Replace \<filename\> with the desired base of the output file to overwrite the default output file names.
 
-`-seed <INT>`   Replace \<INT\> with a positive integer to be used as a fixed seed for the random number generator.
+`-names <filename>` Replace \<filename\> with a file listing the mutation names. By default the mutations are numbered from 1 to n by order of appearance in the inputfile.
+
+`-a` When setting this option, **SCITE** adds the individual cells as additional nodes (leafs) to the reported trees. Cells are attached where they fit best in the given tree (with respect to the error rates). By default, only the mutation tree is reported.
 
 ##### Error learning
 

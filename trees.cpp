@@ -23,6 +23,45 @@
 using namespace std;
 
 
+/* returns all nodes that are descendants of the given node */
+/* note: ancMatrix is 1 at [i,j] if i is an ancestor of j in the tree */
+std::vector<int> getDescendants(bool** ancMatrix, int node, int n){
+  std::vector<int> descendants;
+  for(int i=0; i<n; i++){
+  	if(ancMatrix[node][i]==true){
+			descendants.push_back(i);
+		}
+	}
+	return descendants;
+}
+
+/* returns all nodes that are not descendants of the given node */
+/* i.e. ancestors and nodes in a different branch of the tree   */
+/* note: ancMatrix is 0 at [i,j] if i is not an ancestor of j in the tree */
+std::vector<int> getNonDescendants(bool**& ancMatrix, int node, int n){
+	std::vector<int> ancestors;
+	for(int i=0; i<n; i++){
+		if(ancMatrix[node][i]==false){
+			ancestors.push_back(i);
+		}
+	}
+	return ancestors;
+}
+
+/* counts the number of branches in a tree, this is the same as the number of leafs in the tree */
+int countBranches(int* parents, int length){
+	int count = 0;
+	vector<vector<int> > childList = getChildListFromParentVector(parents, length);
+	for(int i=0; i<childList.size(); i++){
+		if(childList.at(i).size()==0){ count++; }
+	}
+	for(int i=0; i<childList.size(); i++){
+		childList[i].clear();
+	}
+	childList.clear();
+	return count;
+}
+
 /* converts a parent vector to the list of children */
 vector<vector<int> > getChildListFromParentVector(int* parents, int n){
 
@@ -33,6 +72,12 @@ vector<vector<int> > getChildListFromParentVector(int* parents, int n){
 	return childList;
 }
 
+void deleteChildLists(vector<vector<int> > &childLists){
+	for(int i=0; i<childLists.size(); i++){
+		childLists[i].clear();
+	}
+	childLists.clear();
+}
 
 /* converts a tree given as lists of children to the Newick tree format */
 /* Note: This works only if the recursion is started with the root node which is n+1 */
@@ -75,6 +120,17 @@ int* getBreadthFirstTraversal(int* parent, int n){
 	}
 	childLists.clear();
 	return bft;
+}
+
+int* reverse(int* array, int length){
+	int temp;
+
+	for (int i = 0; i < length/2; ++i) {
+		temp = array[length-i-1];
+		array[length-i-1] = array[i];
+		array[i] = temp;
+	}
+	return array;
 }
 
 
