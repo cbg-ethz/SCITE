@@ -82,7 +82,7 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
 		double currScore = currTreeLogScore+currBetaLogScore;                                                         // combined score of current tree and current beta
 
 		for(int it=0; it<noOfLoops; it++){                                     // run the iterations of the MCMC
-        	if(it % 10000 == 0){ cout << it << " iterations " << bestTreeLogScore << " best tree score and best beta " << bestBeta << " and best overall score " << bestScore << "\n";}
+        	if(it % 100000 == 0){ cout << "At mcmc repetition " << r+1 << "/" << noOfReps << ", step " << it << ": best tree score " << bestTreeLogScore << " and best beta " << bestBeta << " and best overall score " << bestScore << "\n";}
 
         	bool moveAccepted = false;                                           // Is the MCMC move accepted?
         	bool moveChangesBeta = changeBeta(moveProbs[0]);                     // true if this move changes beta, not the tree
