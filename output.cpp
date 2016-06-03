@@ -238,7 +238,7 @@ std::string getGraphVizFileContentNames(int* parents, int n, vector<string> gene
 std::string getBestAttachmentString(bool ** ancMatrix, int n, int m, double** logScores, int** dataMatrix, vector<string> geneNames){
 	bool** matrix = attachmentPoints(ancMatrix, n, m, logScores, dataMatrix);
 	std::stringstream a;
-	for(int i=0; i<n; i++){
+	for(int i=0; i<=n; i++){
 		for(int j=0; j<m; j++){
 			if(matrix[i][j]==true){
 				a << geneNames[i] << " -> s" << j << ";\n";
@@ -253,7 +253,7 @@ std::string getBestAttachmentString(bool ** ancMatrix, int n, int m, double** lo
 bool** attachmentPoints(bool ** ancMatrix, int n, int m, double** logScores, int** dataMatrix){
 
     double treeScore = 0.0;
-    bool ** attachment = init_boolMatrix(n, m, false);
+    bool ** attachment = init_boolMatrix(n+1, m, false);
   	for(int sample=0; sample<m; sample++){       // foreach sample
   		double bestAttachmentScore = 0.0;     // currently best score for attaching sample
   		for(int gene=0; gene<n; gene++){   // start with attaching node to root (no genes mutated)
@@ -276,6 +276,16 @@ bool** attachmentPoints(bool ** ancMatrix, int n, int m, double** logScores, int
   		  	if(attachmentScore == bestAttachmentScore){
   		  		attachment[parent][sample] = true;
   		  	}
+  		}
+  		bool rootAttachment = true;
+  		for(int parent=0; parent<n; parent++){
+  			if(attachment[parent][sample] == true){
+  				rootAttachment = false;
+  				break;
+  			}
+  		}
+  		if(rootAttachment == true){
+  			attachment[n][sample] = true;
   		}
   		treeScore += bestAttachmentScore;
   	}
