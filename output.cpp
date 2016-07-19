@@ -184,11 +184,11 @@ string getMutTreeGraphViz(vector<string> label, int nodeCount, int m, int* paren
 	stringstream str;
 
 	str << "digraph g{\n";
-	str << nodes;
+	str << nodes.str();
 	str << "node [color=deeppink4, style=filled, fontcolor=white];	\n";
-	str << edges;
+	str << edges.str();
 	str << "node [color=lightgrey, style=filled, fontcolor=black];  \n";
-	str << leafedges;
+	str << leafedges.str();
 	str << "}\n";
 	return str.str();
 }
