@@ -56,6 +56,16 @@ Assuming the sample data file dataHou18.csv is located in the same folder, `scit
 
 This call computes the ML tree(s) for the given dataset and parameter settings. See below for other program options.
 
+### Windows
+
+1. Modify **findBestTrees.cpp, matrices.cpp, scoreBinTree.cpp**, adding `#include <windows.h>` before `#include <stdbool.h>`.
+1. Install Microsoft Visual Studio, eg Visual Studio 2017 on Windows 7.
+1. Start => All programs => Scroll down and open the Visual Studio 2017 folder => Choose Developer Command Prompt for VS 2017 to open the command prompt window.
+1. In the prompt, `cd path\to\scite\folder`, eg, `cd C:\Users\u1234567\Desktop\SCITE-master`
+1. Compile the program using, eg, `cl /EHsc *.cpp /link /out:scite.exe`
+
+At the end, you will see a C4715 warning but it's fine. The program will be successfully compiled and you can run it from the prompt and then test it using the aforementioned example.
+
 ##  Input Files
 ---------------
 
