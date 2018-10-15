@@ -1,6 +1,17 @@
 # SCITE
 ========
 
+## Update
+---------
+Please be aware that the software (https://github.com/cbg-ethz/infSCITE) accompanying our publication
+
+Kuipers J et al. Single-cell sequencing data reveals widespread recurrence and loss of mutational hits in the life histories of tumorus. Genome Research 2017; 27:1885-1894.
+
+is an extended version of SCITE that has a couple of new features:
+
+* Explicit modelling of doublets
+* Option to specify one recurrent mutation/one mutation loss.
+* Learning  of the false positive rate for panel sequencing data
 
 
 ## Description
